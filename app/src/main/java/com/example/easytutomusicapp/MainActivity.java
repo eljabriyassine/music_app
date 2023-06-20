@@ -18,6 +18,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * The main activity of the application.
+ */
 public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
@@ -29,60 +32,64 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize views
         recyclerView = findViewById(R.id.recycler_view);
         noMusicTextView = findViewById(R.id.no_songs_text);
 
-        if(checkPermission() == false){
+        // Check and request permission if needed
+        if (checkPermission() == false) {
             requestPermission();
             return;
         }
 
+        // Query audio files from external storage
         String[] projection = {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.DATA,
                 MediaStore.Audio.Media.DURATION
         };
-
-        String selection = MediaStore.Audio.Media.IS_MUSIC +" != 0";
-
-        Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,projection,selection,null,null);
-        while(cursor.moveToNext()){
-            AudioModel songData = new AudioModel(cursor.getString(1),cursor.getString(0),cursor.getString(2));
-            if(new File(songData.getPath()).exists())
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+        Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null, null);
+        while (cursor.moveToNext()) {
+            AudioModel songData = new AudioModel(cursor.getString(1), cursor.getString(0), cursor.getString(2));
+            if (new File(songData.getPath()).exists())
                 songsList.add(songData);
         }
 
-        if(songsList.size()==0){
+        // Set up the RecyclerView
+        if (songsList.size() == 0) {
             noMusicTextView.setVisibility(View.VISIBLE);
-        }else{
-            //recyclerview
+        } else {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.setAdapter(new MusicListAdapter(songsList,getApplicationContext()));
+            recyclerView.setAdapter(new MusicListAdapter(songsList, getApplicationContext()));
         }
-
     }
 
-    boolean checkPermission(){
+    /**
+     * Checks if the READ_EXTERNAL_STORAGE permission is granted.
+     *
+     * @return true if the permission is granted, false otherwise.
+     */
+    boolean checkPermission() {
         int result = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        if(result == PackageManager.PERMISSION_GRANTED){
-            return true;
-        }else{
-            return false;
-        }
+        return result == PackageManager.PERMISSION_GRANTED;
     }
 
-    void requestPermission(){
-        if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)){
-            Toast.makeText(MainActivity.this,"READ PERMISSION IS REQUIRED,PLEASE ALLOW FROM SETTTINGS",Toast.LENGTH_SHORT).show();
-        }else
-            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},123);
+    /**
+     * Requests the READ_EXTERNAL_STORAGE permission.
+     */
+    void requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Toast.makeText(MainActivity.this, "READ PERMISSION IS REQUIRED, PLEASE ALLOW FROM SETTINGS", Toast.LENGTH_SHORT).show();
+        } else
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(recyclerView!=null){
-            recyclerView.setAdapter(new MusicListAdapter(songsList,getApplicationContext()));
+        if (recyclerView != null) {
+            recyclerView.setAdapter(new MusicListAdapter(songsList, getApplicationContext()));
         }
     }
 }
